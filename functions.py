@@ -63,22 +63,43 @@ GLD: {self.money}'''
   
 #El jugador, a parte de tener todo lo de arriba, tendrá un equipo y un inventario (a agregar luego)
 class player(creature):
-  def __init__(self, name, hp, a, d, s, money, equip: list):
+  def __init__(self, name, hp, a, d, s, money):
     super().__init__(name, hp, a, d, s, money)
-    self.equip=equip
+    self.equip= [0,0,0]
+    self.inventory = list()
 
-  def equip(self):
+  def see_equip(self):
+    print("Sword Lvl.",self.equip[0])
+    print("Armor Lvl.",self.equip[1])
+    print("Boots Lvl.",self.equip[2])
     return self.equip
+
+  def see_inventory(self):
+    for x in self.inventory:
+      print(x)
+    return None
+
+  def grab_item(self, item):
+    self.inventory.append(item)
+    return input(f'Has obtenido {item.name}')
+
+  def use_item(self, item):
+    item.use(self)
+
+#Funcion para crear un monstruo desde una plantilla
+def born(data: tuple):
+  return creature(data[0],data[1],data[2],data[3],data[4],data[5])
+
 
 ###########################################
 
-#SISTEMA DE PELEA
+#####SISTEMA DE PELEA#####
     
 #Esta es la funcion para cuando hay pelea... hay que agregar cosas
 def fight(player: player, enemy: creature):
   print(line)
   print("Empieza la pelea")
-
+  turn = 0 #Contador de turnos
   while player.hp>0 and enemy.hp>0:
     run = False
     while True:
@@ -90,26 +111,38 @@ def fight(player: player, enemy: creature):
         print("Opcion incorrecta. Intente de nuevo.")
       else:
         if option > 0 and option < 4:
+          
           #Atacar a un enemigo
           if option==1:
             player.attack(enemy)
+          
           #Usar objetos
           elif option==3:
             input("Aún no hago esto jeje. Pierdes turno por pendejo")
+          
+          #Huir
           elif option==2:
             run = player.run(enemy)
+
+          #Ver estado
+          elif option==4:
+            print(player)
+            continue
+          
             if run:
              #Que termine la pelea si se huyó
               return input("Pelea terminada")
+          
           break
+          
         else:
           print(option,"is not an option. Try again.")
     
     #El turno del enemigo
     print(line)
     print("Turno de ", enemy.name)
-    print(enemy.attack(player))
-
+    print(enemy.attack(player)) #Tendre que agregar unas funciones de "comportamiento"
+    turn += 1 #contador de turnos aumenta
   #Si no estas muerto... ganaste! 
   if player.hp>0:
     print(line)
@@ -126,11 +159,32 @@ def fight_menu():
   print('''Es tu turno. ¿Que deseas hacer?
         1. Atacar
         2. Correr
-        3. Usar objeto''')
+        3. Usar item
+        4. Ver estado''')
   o = input("")
   return o
 
 
+###########################################
+
+#Sistema de objetos
+def create_item(data: tuple):
+  return item(data[0], data[1], data[2])
 
 
+class item():
+  def  __init__(self, name: str, action: tuple, price: int):
+    self.name=name
+    self.action=action
+    self.price=price
 
+  def use(self, player: player):
+    if self.action[0] == "LifeUp":
+      player.hp =+ self.action[1]
+      print(f"Estaba buena. +{self.action[1]} de HP")
+    elif self.action[0] == "SpeedUp":
+      player.sp =+ self.action[1]
+      print(f"Uy, calientito. +{self.action[1]} de velocidad por 3 turnos")
+    elif self.action[0] == "DefenseUp":
+      player.dp =+ self.action[1]
+      print(f"Erga, esta potente. +{self.action[1]} de defensa por 3 turnos")
